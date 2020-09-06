@@ -1,0 +1,23 @@
+{
+  "name": "goit-nodejs",
+  "version": "1.0.0",
+  "description": "nodejs",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon ./index.js localhost 8080"
+  },
+  "keywords": [
+    "nodejs",
+    "js"
+  ],
+  "author": "Maksym Tarasenko <max.tarasenko.slip@gmail.com>",
+  "license": "ISC",
+  "devDependencies": {
+    "nodemon": "^2.0.4"
+  },
+  "dependencies": {
+    "uuid": "^8.3.0",
+    "yargs": "^15.4.1"
+  }
+}
