@@ -1,84 +1,78 @@
 const fs = require('fs');
-const path = require('path');
 const { v4: uuid } = require('uuid');
+const mongoose = require('mongoose');
 
-const contactsPath = path.join(__dirname, '../db', 'contacts.json');
+const contactSchema = new mongoose.Schema(
+  {
+    name: { type: String, required: true },
+    email: {
+      type: String,
+      required: true,
+      trim: true,
+      validate: value => value.includes('@'),
+    },
+    phone: { type: String, required: true },
+    subscription: { type: String, default: 'free' },
+    password: { type: String, default: 'password' },
+    token: { type: String, default: '' },
+  },
+  {
+    versionKey: false,
+  },
+);
+
+const contacts = mongoose.model('contacts', contactSchema);
 
 // Output of all contacts
-const listContacts = (_, res) =>
-  fs.readFile(contactsPath, (err, data) => {
-    if (err) throw err;
-    res.json(JSON.parse(data));
-  });
+const listContacts = async (_, res) => res.json(await contacts.find({}));
 
 // Getting a contact by id
-const getContactById = (req, res) =>
-  fs.readFile(contactsPath, (err, data) => {
-    if (err) throw err;
-    const contactId = Number(req.params.contactId);
-    const contacts = JSON.parse(data);
-    const contactById = contacts.find(({ id }) => id === contactId);
-
-    if (contactById) {
-      res.json(contactById);
-    } else {
-      res.status(404).json({ message: 'Not found' });
-    }
-  });
+const getContactById = async (req, res) =>
+  await contacts
+    .findById(req.params.contactId)
+    .then(data => res.json(data))
+    .catch(() => res.status(404).json({ message: 'Not found' }));
 
 // Delete contact by id
-const removeContact = (req, res) =>
-  fs.readFile(contactsPath, (err, data) => {
-    if (err) throw err;
-    const contactId = Number(req.params.contactId);
-    const contacts = JSON.parse(data);
-    const findContactById = contacts.find(({ id }) => id === contactId);
-
-    if (findContactById) {
-      const filteredContacts = contacts.filter(({ id }) => id !== contactId);
-      fs.writeFile(contactsPath, JSON.stringify(filteredContacts), err => {
-        if (err) throw err;
-        res.json({ message: 'contact deleted' });
-      });
-    } else {
-      res.status(404).json({ message: 'Not found' });
-    }
-  });
+const removeContact = async (req, res) =>
+  await contacts
+    .findByIdAndRemove(req.params.contactId)
+    .then(() => res.json({ message: 'contact deleted' }))
+    .catch(() => res.status(404).json({ message: 'Not found' }));
 
 // Add contact
-const addContact = (req, res) =>
-  fs.readFile(contactsPath, (err, data) => {
-    if (err) throw err;
-    const { name, email, phone } = req.body;
+const addContact = async (req, res) => {
+  const { name, email, phone } = req.body;
 
-    if (!(name && email && phone)) {
-      res.status(400).json({ message: 'missing required name field' });
-      return;
-    }
+  if (!(name && email && phone)) {
+    res.status(400).json({ message: 'missing required name field' });
+    return;
+  }
 
-    const contacts = JSON.parse(data);
-    const findContact = contacts.find(
-      e => e.name == name && e.email == email && e.phone == phone,
-    );
+  const isContact = await contacts
+    .findOne({
+      name: name,
+      email: email,
+      phone: phone,
+    })
+    .exec();
 
-    if (!findContact) {
-      const contact = {
-        id: uuid(),
-        name: name,
-        email: email,
-        phone: phone,
-      };
-      contacts.push(contact);
-      fs.writeFile(contactsPath, JSON.stringify(contacts), err => {
-        if (err) throw err;
-      });
-      res.status(201).json(contact);
-    } else {
-      res.status(422).json({ message: 'entity already exists' });
-    }
-  });
+  if (isContact) {
+    res.status(422).json({ message: 'entity already exists' });
+  } else {
+    contacts
+      .create(req.body)
+      .then(data => res.json(data))
+      .catch(() =>
+        res
+          .status(400)
+          .json({ message: 'check if the data entered is correct' }),
+      );
+  }
+};
 
-const updateContact = (req, res) => {
+// Update contact
+const updateContact = async (req, res) => {
   const { name, email, phone } = req.body;
 
   if (!(name || email || phone)) {
@@ -86,30 +80,10 @@ const updateContact = (req, res) => {
     return;
   }
 
-  fs.readFile(contactsPath, (err, data) => {
-    if (err) throw err;
-    const contactId = Number(req.params.contactId);
-    const contacts = JSON.parse(data);
-    const findContactById = contacts.find(({ id }) => id === contactId);
-
-    if (findContactById) {
-      const contactsChanged = contacts.map(obj => {
-        if (obj.id === contactId) {
-          obj.name = name ? name : obj.name;
-          obj.email = email ? email : obj.email;
-          obj.phone = phone ? phone : obj.phone;
-          res.json(obj);
-          return obj;
-        }
-        return obj;
-      });
-      fs.writeFile(contactsPath, JSON.stringify(contactsChanged), err => {
-        if (err) throw err;
-      });
-    } else {
-      res.status(404).json({ message: 'Not found' });
-    }
-  });
+  await contacts
+    .findByIdAndUpdate(req.params.contactId, req.body)
+    .then(() => res.json({ message: 'contact updated' }))
+    .catch(() => res.status(404).json({ message: 'Not found' }));
 };
 
 module.exports = {
