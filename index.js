@@ -1,32 +1,27 @@
-const {
-  listContacts,
-  getContactById,
-  removeContact,
-  addContact,
-} = require('./contacts');
-const { argv } = require('yargs');
+require('dotenv').config();
+const express = require('express');
+const morgan = require('morgan');
+const cors = require('cors');
+const contactsRoutes = require('./routes/contacts');
 
-function invokeAction({ action, id, name, email, phone }) {
-  switch (action) {
-    case 'list':
-      listContacts();
-      break;
+const app = express();
+const port = process.env.PORT || 3000;
+const www = process.env.HOST || 'http://localhost';
 
-    case 'get':
-      getContactById(id);
-      break;
+app.use(morgan('combined'));
+app.use(express.json());
 
-    case 'add':
-      addContact(name, email, phone);
-      break;
+const corsOptions = {
+  origin: www,
+  optionsSuccessStatus: 200,
+};
+app.use(cors(corsOptions));
 
-    case 'remove':
-      removeContact(id);
-      break;
+// REST API for working with a collection of contacts
+app.use('/', contactsRoutes);
 
-    default:
-      console.warn('\x1B[31m Unknown action type!');
-  }
-}
-
-invokeAction(argv);
+app.listen(port, () =>
+  console.log(
+    `console.log('CORS-enabled web server listening on http://localhost:${port}`,
+  ),
+);
