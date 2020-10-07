@@ -1,6 +1,5 @@
-const fs = require('fs');
-const { v4: uuid } = require('uuid');
 const mongoose = require('mongoose');
+const mongoosePaginate = require('mongoose-paginate-v2');
 
 const contactSchema = new mongoose.Schema(
   {
@@ -20,23 +19,26 @@ const contactSchema = new mongoose.Schema(
     versionKey: false,
   },
 );
+contactSchema.plugin(mongoosePaginate);
 
-const contacts = mongoose.model('contacts', contactSchema);
+const Contacts = mongoose.model('contacts', contactSchema);
 
-// Output of all contacts
-const listContacts = async (_, res) => res.json(await contacts.find({}));
+// Getting contacts
+const listContacts = async ({ query: { page, limit, sub } }, res) =>
+  await Contacts.paginate(sub ? { subscription: sub } : {}, {
+    page: page ? page : 1,
+    limit: limit ? limit : 10,
+  }).then(({ docs }) => res.json(docs));
 
 // Getting a contact by id
 const getContactById = async (req, res) =>
-  await contacts
-    .findById(req.params.contactId)
+  await Contacts.findById(req.params.contactId)
     .then(data => res.json(data))
     .catch(() => res.status(404).json({ message: 'Not found' }));
 
 // Delete contact by id
 const removeContact = async (req, res) =>
-  await contacts
-    .findByIdAndRemove(req.params.contactId)
+  await Contacts.findByIdAndRemove(req.params.contactId)
     .then(() => res.json({ message: 'contact deleted' }))
     .catch(() => res.status(404).json({ message: 'Not found' }));
 
@@ -49,19 +51,16 @@ const addContact = async (req, res) => {
     return;
   }
 
-  const isContact = await contacts
-    .findOne({
-      name: name,
-      email: email,
-      phone: phone,
-    })
-    .exec();
+  const isContact = await Contacts.findOne({
+    name: name,
+    email: email,
+    phone: phone,
+  }).exec();
 
   if (isContact) {
     res.status(422).json({ message: 'entity already exists' });
   } else {
-    contacts
-      .create(req.body)
+    Contacts.create(req.body)
       .then(data => res.json(data))
       .catch(() =>
         res
@@ -80,8 +79,7 @@ const updateContact = async (req, res) => {
     return;
   }
 
-  await contacts
-    .findByIdAndUpdate(req.params.contactId, req.body)
+  await Contacts.findByIdAndUpdate(req.params.contactId, req.body)
     .then(() => res.json({ message: 'contact updated' }))
     .catch(() => res.status(404).json({ message: 'Not found' }));
 };
