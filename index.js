@@ -2,12 +2,16 @@ require('dotenv').config();
 const express = require('express');
 const morgan = require('morgan');
 const cors = require('cors');
-const contactsRoutes = require('./routes/contacts');
+const { contactsRoutes, usersRoutes, authRoutes } = require('./routes');
 const mongoose = require('mongoose');
 
 // Set up default mongoose connection
+const dbUser = 'dzhoi';
+const dbToken = '4VZQ4hxa2uTHfLZ7';
+const dbName = 'db-contacts';
+
 mongoose.connect(
-  'mongodb+srv://dzhoi:4VZQ4hxa2uTHfLZ7@cluster0.7wmkk.mongodb.net/db-contacts?retryWrites=true&w=majority',
+  `mongodb+srv://${dbUser}:${dbToken}@cluster0.7wmkk.mongodb.net/${dbName}?retryWrites=true&w=majority`,
   { useNewUrlParser: true },
   err => {
     if (err) {
@@ -39,6 +43,10 @@ app.use(cors(corsOptions));
 
 // REST API for working with a collection of contacts
 app.use('/', contactsRoutes);
+// REST API for working with a auth
+app.use('/', authRoutes);
+// REST API for working with a collection of users
+app.use('/', usersRoutes);
 
 app.listen(port, () =>
   console.log(
