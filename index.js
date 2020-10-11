@@ -34,6 +34,7 @@ const www = process.env.HOST || 'http://localhost';
 
 app.use(morgan('combined'));
 app.use(express.json());
+app.use(express.static('public'));
 
 const corsOptions = {
   origin: www,
