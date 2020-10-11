@@ -5,6 +5,7 @@ const userSchema = new mongoose.Schema(
   {
     email: String,
     password: String,
+    avatarURL: String,
     subscription: {
       type: String,
       enum: ['free', 'pro', 'premium'],
