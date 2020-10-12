@@ -2,7 +2,12 @@ require('dotenv').config();
 const express = require('express');
 const morgan = require('morgan');
 const cors = require('cors');
-const { contactsRoutes, usersRoutes, authRoutes } = require('./routes');
+const {
+  contactsRoutes,
+  usersRoutes,
+  authRoutes,
+  multerRoutes,
+} = require('./routes');
 const mongoose = require('mongoose');
 
 // Set up default mongoose connection
@@ -48,6 +53,8 @@ app.use('/', contactsRoutes);
 app.use('/', authRoutes);
 // REST API for working with a collection of users
 app.use('/', usersRoutes);
+// REST API for working with a multer
+app.use('/', multerRoutes);
 
 app.listen(port, () =>
   console.log(
