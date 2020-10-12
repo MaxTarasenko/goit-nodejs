@@ -4,22 +4,24 @@ const bcrypt = require('bcryptjs');
 const User = require('../users/users.model');
 
 // New user registration
-const registration = async ({ body: { email, password } }, res) => {
-  const isUser = await User.findOne({ email: email }).exec();
+const registration = async ({ body }, res, next) => {
+  const isUser = await User.findOne({ email: body.email }).exec();
   if (isUser) return res.status(409).json({ message: 'Email in use' });
 
-  const passwordHash = await bcrypt.hash(password, 6);
+  const passwordHash = await bcrypt.hash(body.password, 6);
   await User.create({
-    email: email,
+    email: body.email,
     password: passwordHash,
-  }).then(data =>
+  }).then(data => {
     res.status(201).json({
       user: {
         email: data.email,
         subscription: data.subscription,
       },
-    }),
-  );
+    });
+    body.id = data._id;
+  });
+  next();
 };
 
 // Login user

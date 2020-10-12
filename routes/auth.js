@@ -6,9 +6,10 @@ const {
   logout,
   validation,
   authorize,
+  avatarCreator,
 } = require('../auth');
 
-route.post('/api/auth/register', [validation, registration]);
+route.post('/api/auth/register', [validation, registration, avatarCreator]);
 
 route.post('/api/auth/login', [validation, login]);
 
