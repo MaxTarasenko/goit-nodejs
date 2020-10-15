@@ -1,14 +1,12 @@
-require('dotenv').config();
 const express = require('express');
 const morgan = require('morgan');
 const cors = require('cors');
-const {
-  contactsRoutes,
-  usersRoutes,
-  authRoutes,
-  multerRoutes,
-} = require('./routes');
 const mongoose = require('mongoose');
+const contactsRouter = require('./api/contacts/router');
+const userRouter = require('./api/users/router');
+const authRouter = require('./api/auth/router');
+
+require('dotenv').config();
 
 // Set up default mongoose connection
 const dbUser = 'dzhoi';
@@ -17,7 +15,7 @@ const dbName = 'db-contacts';
 
 mongoose.connect(
   `mongodb+srv://${dbUser}:${dbToken}@cluster0.7wmkk.mongodb.net/${dbName}?retryWrites=true&w=majority`,
-  { useNewUrlParser: true },
+  { useNewUrlParser: true, useFindAndModify: false },
   err => {
     if (err) {
       console.log('Database connection error');
@@ -48,13 +46,11 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 // REST API for working with a collection of contacts
-app.use('/', contactsRoutes);
-// REST API for working with a auth
-app.use('/', authRoutes);
+app.use('/', contactsRouter);
 // REST API for working with a collection of users
-app.use('/', usersRoutes);
-// REST API for working with a multer
-app.use('/', multerRoutes);
+app.use('/', userRouter);
+// REST API Auth
+app.use('/', authRouter);
 
 app.listen(port, () =>
   console.log(
