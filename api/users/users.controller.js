@@ -1,12 +1,9 @@
-const fs = require('fs');
-const Joi = require('@hapi/joi');
-const Avatar = require('avatar-builder');
-const val = require('../validation/validation');
-const imagemin = require('imagemin');
-const imageminJpegtran = require('imagemin-jpegtran');
-const usersModel = require('./users.model');
-
 require('dotenv').config();
+const Joi = require('@hapi/joi');
+const val = require('../validation/validation');
+const usersModel = require('./users.model');
+const { host, port } = require('../../config');
+const minifyImage = require('../../services/minifyImage.service');
 
 class UsersController {
   // Validation
@@ -17,37 +14,6 @@ class UsersController {
     if (validation.error) return handleValidationError(res, validation);
 
     next();
-  }
-
-  // Avatar Creation
-  async generateAvatars(name) {
-    try {
-      if (!fs.existsSync('./tmp')) {
-        fs.mkdirSync('./tmp');
-      }
-
-      const filepath = `tmp/avatar-${name}.jpg`;
-      const avatar = Avatar.male8bitBuilder(128);
-      await avatar
-        .create('gabriel')
-        .then(buffer => fs.writeFileSync(filepath, buffer));
-      this.minifyImage(filepath);
-    } catch (err) {
-      console.log(err.message);
-    }
-  }
-
-  // Image Compression
-  async minifyImage(filepath) {
-    try {
-      await imagemin([filepath], {
-        destination: 'public/avatars',
-        plugins: [imageminJpegtran()],
-      });
-      fs.unlinkSync(filepath);
-    } catch (err) {
-      console.log(err);
-    }
   }
 
   // GET
@@ -79,9 +45,9 @@ class UsersController {
     try {
       const { filename, path } = req.file;
       const { user } = req;
-      const imgURL = `localhost:3000/avatars/${filename}`;
+      const imgURL = `${host}:${port}/avatars/${filename}`;
 
-      this.minifyImage(path);
+      await minifyImage(path);
       await usersModel.findByIdAndUpdate(user._id, { avatarURL: imgURL });
 
       res.status(200).send(imgURL);

@@ -3,7 +3,8 @@ const Joi = require('@hapi/joi');
 const bcrypt = require('bcrypt');
 const val = require('../validation/validation');
 const usersModel = require('../users/users.model');
-const usersController = require('../users/users.controller');
+const { host, port, JWT_KEY } = require('../../config');
+const generateAvatars = require('../../services/generateAvatars.service');
 
 require('dotenv').config();
 
@@ -31,8 +32,6 @@ class AuthController {
     try {
       const token = req.headers.authorization.split(' ')[1];
       let userId;
-
-      const JWT_KEY = process.env.JWT_SECRETKEY;
 
       try {
         userId = await jwt.verify(token, JWT_KEY).id;
@@ -65,8 +64,8 @@ class AuthController {
 
       const hashedPass = await bcrypt.hash(newUser.password, 10);
 
-      await usersController.generateAvatars(newUser.email);
-      const imgPath = `localhost:3000/avatars/avatar-${newUser.email}.jpg`;
+      await generateAvatars(newUser.email);
+      const imgPath = `${host}:${port}/avatars/avatar-${newUser.email}.jpg`;
 
       const createdUser = await usersModel.create({
         ...newUser,
@@ -88,7 +87,6 @@ class AuthController {
   async loginUser({ body: { email, password } }, res) {
     try {
       const user = await usersModel.findOne({ email });
-      const JWT_KEY = process.env.JWT_SECRETKEY;
 
       if (!user) return res.status(401).send('Email or password is wrong');
 
