@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const morgan = require('morgan');
 const cors = require('cors');
@@ -5,16 +6,10 @@ const mongoose = require('mongoose');
 const contactsRouter = require('./api/contacts/router');
 const userRouter = require('./api/users/router');
 const authRouter = require('./api/auth/router');
-
-require('dotenv').config();
-
-// Set up default mongoose connection
-const dbUser = 'dzhoi';
-const dbToken = '4VZQ4hxa2uTHfLZ7';
-const dbName = 'db-contacts';
+const { host, port, databaseUrl } = require('./config');
 
 mongoose.connect(
-  `mongodb+srv://${dbUser}:${dbToken}@cluster0.7wmkk.mongodb.net/${dbName}?retryWrites=true&w=majority`,
+  databaseUrl,
   { useNewUrlParser: true, useFindAndModify: false },
   err => {
     if (err) {
@@ -32,15 +27,13 @@ var db = mongoose.connection;
 db.on('error', console.error.bind(console, 'MongoDB connection error:'));
 
 const app = express();
-const port = process.env.PORT || 3000;
-const www = process.env.HOST || 'http://localhost';
 
-app.use(morgan('combined'));
+app.use(morgan('tiny'));
 app.use(express.json());
 app.use(express.static('public'));
 
 const corsOptions = {
-  origin: www,
+  origin: host,
   optionsSuccessStatus: 200,
 };
 app.use(cors(corsOptions));
@@ -54,6 +47,6 @@ app.use('/', authRouter);
 
 app.listen(port, () =>
   console.log(
-    `console.log('CORS-enabled web server listening on http://localhost:${port}`,
+    `console.log('CORS-enabled web server listening on http://${host}:${port}`,
   ),
 );
