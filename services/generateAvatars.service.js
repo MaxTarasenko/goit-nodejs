@@ -1,17 +1,21 @@
 const Avatar = require('avatar-builder');
 const fs = require('fs');
+const fsPromises = fs.promises;
 const minifyImage = require('./minifyImage.service');
+const { pathTMP, filePathTMP } = require('../config');
 
 // Avatar Creation
 const generateAvatars = async name => {
   try {
-    const filepath = `tmp/avatar-${name}.jpg`;
+    try {
+      await fsPromises.stat(pathTMP);
+    } catch (error) {
+      await fsPromises.mkdir(pathTMP);
+    }
     const avatar = Avatar.male8bitBuilder(128);
     const buffer = await avatar.create('gabriel');
-    fs.stat('./tmp', err => {
-      if (err) fs.mkdirSync('./tmp', () => {});
-      fs.writeFile(filepath, buffer, async () => await minifyImage(filepath));
-    });
+    await fsPromises.writeFile(filePathTMP(name), buffer);
+    await minifyImage(filePathTMP(name));
   } catch (err) {
     console.log(err.message);
   }

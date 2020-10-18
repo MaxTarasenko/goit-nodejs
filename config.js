@@ -11,4 +11,19 @@ const databaseUrl = `mongodb+srv://${dbUser}:${dbToken}@cluster0.7wmkk.mongodb.n
 // JSON Web Token
 const JWT_KEY = process.env.JWT_SECRETKEY;
 
-module.exports = { port, host, databaseUrl, JWT_KEY };
+// Paths
+const pathTMP = './tmp';
+const filePathTMP = name => `tmp/avatar-${name}.jpg`;
+const pathMinifyImage = 'public/avatars';
+const pathUploadFiles = 'public/uploads';
+
+module.exports = {
+  port,
+  host,
+  databaseUrl,
+  JWT_KEY,
+  pathMinifyImage,
+  pathTMP,
+  pathUploadFiles,
+  filePathTMP,
+};

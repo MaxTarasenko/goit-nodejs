@@ -1,15 +1,16 @@
 const fs = require('fs');
 const imagemin = require('imagemin');
 const imageminJpegtran = require('imagemin-jpegtran');
+const { pathMinifyImage } = require('../config');
 
 // Image Compression
 const minifyImage = async filepath => {
   try {
     await imagemin([filepath], {
-      destination: 'public/avatars',
+      destination: pathMinifyImage,
       plugins: [imageminJpegtran()],
     });
-    fs.unlink(filepath, () => {});
+    fs.promises.unlink(filepath);
   } catch (err) {
     console.log(err);
   }

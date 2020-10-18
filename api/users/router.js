@@ -4,9 +4,10 @@ const path = require('path');
 const multer = require('multer');
 const UsersControl = require('./users.controller');
 const AuthControl = require('../auth/auth.controller');
+const { pathUploadFiles } = require('../../config');
 
 const storage = multer.diskStorage({
-  destination: 'public/uploads',
+  destination: pathUploadFiles,
   filename: function (req, file, cb) {
     const { fieldname, originalname } = file;
     const { user } = req;
