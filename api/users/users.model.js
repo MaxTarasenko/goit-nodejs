@@ -1,10 +1,10 @@
 const mongoose = require('mongoose');
 
-// Creating a Database Schema
-const userSchema = new mongoose.Schema(
+const usersSchema = new mongoose.Schema(
   {
     email: String,
     password: String,
+    avatarURL: String,
     subscription: {
       type: String,
       enum: ['free', 'pro', 'premium'],
@@ -17,7 +17,6 @@ const userSchema = new mongoose.Schema(
   },
 );
 
-// Creating a Model for a Database
-const User = mongoose.model('users', userSchema);
+const usersModel = mongoose.model('Users', usersSchema, 'users');
 
-module.exports = User;
+module.exports = usersModel;

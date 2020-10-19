@@ -2,17 +2,15 @@ require('dotenv').config();
 const express = require('express');
 const morgan = require('morgan');
 const cors = require('cors');
-const { contactsRoutes, usersRoutes, authRoutes } = require('./routes');
 const mongoose = require('mongoose');
-
-// Set up default mongoose connection
-const dbUser = 'dzhoi';
-const dbToken = '4VZQ4hxa2uTHfLZ7';
-const dbName = 'db-contacts';
+const contactsRouter = require('./api/contacts/router');
+const userRouter = require('./api/users/router');
+const authRouter = require('./api/auth/router');
+const { host, port, databaseUrl } = require('./config');
 
 mongoose.connect(
-  `mongodb+srv://${dbUser}:${dbToken}@cluster0.7wmkk.mongodb.net/${dbName}?retryWrites=true&w=majority`,
-  { useNewUrlParser: true },
+  databaseUrl,
+  { useNewUrlParser: true, useFindAndModify: false },
   err => {
     if (err) {
       console.log('Database connection error');
@@ -29,27 +27,26 @@ var db = mongoose.connection;
 db.on('error', console.error.bind(console, 'MongoDB connection error:'));
 
 const app = express();
-const port = process.env.PORT || 3000;
-const www = process.env.HOST || 'http://localhost';
 
-app.use(morgan('combined'));
+app.use(morgan('tiny'));
 app.use(express.json());
+app.use(express.static('public'));
 
 const corsOptions = {
-  origin: www,
+  origin: host,
   optionsSuccessStatus: 200,
 };
 app.use(cors(corsOptions));
 
 // REST API for working with a collection of contacts
-app.use('/', contactsRoutes);
-// REST API for working with a auth
-app.use('/', authRoutes);
+app.use('/', contactsRouter);
 // REST API for working with a collection of users
-app.use('/', usersRoutes);
+app.use('/', userRouter);
+// REST API Auth
+app.use('/', authRouter);
 
 app.listen(port, () =>
   console.log(
-    `console.log('CORS-enabled web server listening on http://localhost:${port}`,
+    `console.log('CORS-enabled web server listening on http://${host}:${port}`,
   ),
 );
