@@ -11,6 +11,7 @@ const usersSchema = new mongoose.Schema(
       default: 'free',
     },
     token: String,
+    verificationToken: String,
   },
   {
     versionKey: false,

@@ -1,3 +1,4 @@
+require('dotenv').config();
 // Server default settings
 const port = process.env.PORT || 3000;
 const host = process.env.HOST || 'http://localhost';
@@ -17,6 +18,9 @@ const filePathTMP = name => `tmp/avatar-${name}.jpg`;
 const pathMinifyImage = 'public/avatars';
 const pathUploadFiles = 'public/uploads';
 
+// Mailer
+const sender = `Nodemailer  ${process.env.NODEMAILER_USER}`;
+
 module.exports = {
   port,
   host,
@@ -26,4 +30,5 @@ module.exports = {
   pathTMP,
   pathUploadFiles,
   filePathTMP,
+  sender,
 };

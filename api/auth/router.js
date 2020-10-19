@@ -20,4 +20,6 @@ authRouter.post(
   AuthControl.logoutUser,
 );
 
+authRouter.get('/api/auth/verify/:verificationToken', AuthControl.verify);
+
 module.exports = authRouter;
