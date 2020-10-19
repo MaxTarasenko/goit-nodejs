@@ -1,3 +1,4 @@
+require('dotenv').config();
 const jwt = require('jsonwebtoken');
 const Joi = require('@hapi/joi');
 const bcrypt = require('bcrypt');
@@ -5,8 +6,8 @@ const val = require('../validation/validation');
 const usersModel = require('../users/users.model');
 const { host, port, JWT_KEY } = require('../../config');
 const generateAvatars = require('../../services/generateAvatars.service');
-
-require('dotenv').config();
+const toVerifyUser = require('../../services/toVerifyUser.service');
+const { v4: uuidv4 } = require('uuid');
 
 class AuthController {
   // Validation
@@ -56,6 +57,7 @@ class AuthController {
   async registerUser(req, res) {
     try {
       const newUser = { ...req.body };
+      const verifyToken = uuidv4();
       const existedUser = await usersModel.findOne({
         email: newUser.email,
       });
@@ -67,10 +69,13 @@ class AuthController {
       await generateAvatars(newUser.email);
       const imgPath = `${host}:${port}/avatars/avatar-${newUser.email}.jpg`;
 
+      toVerifyUser(newUser.email, verifyToken);
+
       const createdUser = await usersModel.create({
         ...newUser,
         password: hashedPass,
         avatarURL: imgPath,
+        verificationToken: verifyToken,
       });
 
       res.status(201).send({
@@ -115,6 +120,25 @@ class AuthController {
       await usersModel.findByIdAndUpdate(user._id, { token: null });
 
       res.status(204).send();
+    } catch (err) {
+      res.status(400).send(err.message);
+    }
+  }
+
+  async verify(req, res) {
+    const { verificationToken } = req.params;
+    console.log(verificationToken);
+
+    try {
+      const user = await usersModel.findOne({ verificationToken });
+      if (!user) res.status(404).send('User not found');
+
+      await usersModel.findOneAndUpdate(
+        { verificationToken },
+        { verificationToken: null },
+      );
+
+      res.status(200).send();
     } catch (err) {
       res.status(400).send(err.message);
     }
