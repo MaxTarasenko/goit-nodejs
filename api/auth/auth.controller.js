@@ -57,7 +57,7 @@ class AuthController {
   async registerUser(req, res) {
     try {
       const newUser = { ...req.body };
-      const verifyToken = uuidv4();
+      const verificationToken = uuidv4();
       const existedUser = await usersModel.findOne({
         email: newUser.email,
       });
@@ -69,13 +69,13 @@ class AuthController {
       await generateAvatars(newUser.email);
       const imgPath = `${host}:${port}/avatars/avatar-${newUser.email}.jpg`;
 
-      toVerifyUser(newUser.email, verifyToken);
+      await toVerifyUser(newUser.email, verificationToken);
 
       const createdUser = await usersModel.create({
         ...newUser,
         password: hashedPass,
         avatarURL: imgPath,
-        verificationToken: verifyToken,
+        verificationToken,
       });
 
       res.status(201).send({
